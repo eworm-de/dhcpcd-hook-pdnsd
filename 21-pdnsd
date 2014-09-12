@@ -1,23 +1,25 @@
 #!/bin/sh
- 
-case "${reason}" in
-	BOUND|REBIND|REBOOT|RENEW|TIMEOUT|STATIC)
-		# Set the IP of "dynamic" entry for pdnsd
-		SRVS=""
-		for X in ${new_domain_name_servers}; do
-			if [ -z "${SRVS}" ]; then
-				SRVS="${X}"
-			else
-				SRVS="${SRVS},${X}"
-			fi
-		done
-		pdnsd-ctl server dynamic up ${SRVS}
-		;;
-	PREINIT|EXPIRE|FAIL|IPV4LL|NAK|NOCARRIER|RELEASE|STOP)
-		# reset to values in /etc/pdnsd.conf
-		pdnsd-ctl config
-		;;
-	INFORM)
-		# do nothing here
-		;;
-esac
+
+if pdnsd-ctl status >/dev/null 2>/dev/null; then
+	case "${reason}" in
+		BOUND|REBIND|REBOOT|RENEW|TIMEOUT|STATIC)
+			# Set the IP of "dynamic" entry for pdnsd
+			SRVS=""
+			for NAMESERVER in ${new_domain_name_servers}; do
+				if [ -z "${SRVS}" ]; then
+					SRVS="${NAMESERVER}"
+				else
+					SRVS="${SRVS},${NAMESERVER}"
+				fi
+			done
+			pdnsd-ctl server dynamic up ${SRVS}
+			;;
+		PREINIT|EXPIRE|FAIL|IPV4LL|NAK|NOCARRIER|RELEASE|STOP)
+			# reset to values in /etc/pdnsd.conf
+			pdnsd-ctl config
+			;;
+		INFORM)
+			# do nothing here
+			;;
+	esac
+fi
